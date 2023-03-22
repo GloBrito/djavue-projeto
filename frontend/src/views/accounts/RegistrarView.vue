@@ -2,24 +2,37 @@
   <v-container>
     <v-row align="center" class="mt-10" no-gutters>
       <v-col cols="12" sm="6" offset-sm="3">
-        <v-sheet class="pa-2"> <h1>Login</h1> </v-sheet>
+        <v-sheet class="pa-2"> <h1>Cadastro</h1> </v-sheet>
         <v-form>
+
           <v-text-field
             v-model="username"
             label="Username"
+            :rules="nameRules"
             prepend-inner-icon="mdi-home-account"
             variant="outlined"
             required
-            @keyup.enter="login"></v-text-field>
+            @keyup.enter="registrar"></v-text-field>
+
+          <v-text-field
+            v-model="email"
+            label="E-Mail"
+            :rules="emailRules"
+            prepend-inner-icon="mdi-email-fast-outline"
+            variant="outlined"
+            required
+            @keyup.enter="registrar"></v-text-field>
 
           <v-text-field
             v-model="password"
             type="password"
-            label="Password"
+            label="Senha"
+            :rules="passwordRules"
             prepend-inner-icon="mdi-key-outline"
             variant="outlined"
             required
-            @keyup.enter="login"></v-text-field>
+            @keyup.enter="registrar"></v-text-field>
+
 
           <v-btn
             block
@@ -27,8 +40,8 @@
             rounded="pill"
             color="purple accent-1"
             append-icon="mdi-chevron-right"
-            @click="login">
-            Login
+            @click="registrar">
+            Continue
           </v-btn>
           <v-btn
             class="my-2"
@@ -38,14 +51,13 @@
             color="purple accent-1"
             variant="outlined"
             :to="{ name: 'base-home' }">
-            Início
+            Voltar
           </v-btn>
         </v-form>
       </v-col>
     </v-row>
   </v-container>
 </template>
-
 <script>
 import { mapState } from "pinia"
 import AccountsApi from "@/api/accounts.api.js"
@@ -62,14 +74,18 @@ export default {
     return {
       loading: false,
       valid: false,
+      email:"",
       username: "",
       password: "",
+      nameRules: [(v) => !!v || "Nome é obrigatório"],
+      emailRules: [
+      (email) => !!email || "Email é obrigatório",
+      (v) => /.+@.+\..+/.test(v) || "Email inválido",
+      ],
+      passwordRules: [(v) => !!v || "Senha é obrigatória"],
       error: false,
       visible: false,
     }
-  },
-  computed: {
-    ...mapState(useAccountsStore, ["loggedUser"]),
   },
   mounted() {
     console.log(this.loggedUser)
@@ -82,20 +98,21 @@ export default {
     })
   },
   methods: {
-    login() {
+    registrar() {
       this.loading = true
-      AccountsApi.login(this.username, this.password)
+      AccountsApi.registrar(this.username, this.email, this.password)
         .then((response) => {
           if (!response) {
-            this.appStore.showSnackbar("Usuário ou senha invalida", "danger")
+            this.appStore.showSnackbar("Erro ao registrar usuario", responseError)
             return
+          } else if (response.success) {
+            this.$router.push({ name: "accounts-login" })
+            console.log("Usuário registrado com sucesso.")
           }
-          this.saveLoggedUser(response.user)
-          this.showTasks()
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .catch((error) => {
+            console.error("Erro ao registrar usuário:", error)
+          })
     },
     saveLoggedUser(user) {
       this.error = !user
@@ -109,6 +126,6 @@ export default {
       this.$router.push({ name: "tasks-list" })
       console.log("--> tasks")
     },
-  },
+  }
 }
 </script>
