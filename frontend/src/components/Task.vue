@@ -1,17 +1,50 @@
 <template>
   <v-card>
-    <v-card-text>
-      <div>#{{ task.id }}</div>
-      <p class="ma-0 pa-0 text-h5 text--primary">
-        {{ task.description }}  
+    <v-card-text  class="d-flex flex-row mb-6">
+      <input type="checkbox" @click="last" v-model="check">
+      <p class="ml-3 text-h5 text--primary" :class="{'text-decoration-line-through':check}">
+        {{ task.description }}
       </p>
+      <div class="text-center">
+        <v-dialog
+          v-model="dialog"
+        >
+          <template v-slot:activator="{ props }">
+            <v-icon class="pl-4 " v-bind="props">
+            mdi-pencil
+            </v-icon>
+          </template>
 
-      <v-icon aria-hidden="false" @click="deleteTask">
+          <v-card>
+            <v-card-text>
+              <v-responsive
+              class="mx-auto"
+              max-width="344"
+            >
+                <v-text-field
+                  v-model=" task.description "
+                  clearable
+                  hide-details="auto"
+                  label="Edite o Título"
+                ></v-text-field>
+            </v-responsive>
+            </v-card-text>
+            <div class="d-flex justify-center mb-6">
+              <v-card-actions>
+                <v-btn color="purple accent-1" block @click="editTask">Editar</v-btn>
+              </v-card-actions>
+              <v-card-actions>
+                <v-btn color="purple accent-1" block @click="dialog = false">Close</v-btn>
+              </v-card-actions>
+            </div>
+          </v-card>
+        </v-dialog>
+      </div>
+      <v-icon class="pa-2 ml-auto" outlined tile @click="deleteTask">
         mdi-delete
       </v-icon>
-      
-         </v-card-text>
-          </v-card>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script>
@@ -24,9 +57,20 @@ export default {
       roger: "usalinter",
     },
   },
-  emits: ["removeTask"],
-  data: () => ({}),
+  emits: ["removeTask", "editarTask"],
+  data: () => ({
+    check: false, 
+    dialog: false,
+    edit:"",
+    }),
   methods: {
+    editTask() {
+      this.dialog = false
+      this.$emit("editarTask", {
+        edit: this.task.description,
+      })
+      this.edit = ""
+    },
     deleteTask() {
       this.$emit("removeTask", {
         task: this.task.id,
